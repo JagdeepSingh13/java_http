@@ -20,10 +20,12 @@ public class HttpConnectionWorkerThread extends Thread{
 
     @Override
     public void run() {
+        InputStream inputStream = null;
+        OutputStream outputStream = null;
         try {
             // once we accept a connection we use socket (variable)
-            InputStream inputStream = socket.getInputStream();
-            OutputStream outputStream = socket.getOutputStream();
+            inputStream = socket.getInputStream();
+            outputStream = socket.getOutputStream();
 
             // TODO reading
 
@@ -40,19 +42,24 @@ public class HttpConnectionWorkerThread extends Thread{
 
             outputStream.write(response.getBytes());
 
-            inputStream.close();
-            outputStream.close();
-            socket.close();
-
-            try {
-                sleep(5000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+//            try {
+//                sleep(5000);
+//            } catch (InterruptedException e) {
+//                throw new RuntimeException(e);
+//            }
             LOGGER.info("connection processing finished");
 
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            LOGGER.error("Problem with communication", e);
+        }finally {
+            try {
+                if(inputStream != null)
+                    inputStream.close();
+                if(outputStream!= null)
+                    outputStream.close();
+                if(socket != null)
+                    socket.close();
+            } catch (IOException e) {}
         }
     }
 }

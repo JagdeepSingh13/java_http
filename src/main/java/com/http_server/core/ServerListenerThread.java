@@ -30,18 +30,20 @@ public class ServerListenerThread extends Thread {
             while (serverSocket.isBound() && !serverSocket.isClosed()) {
                 // waits to get a connection and accept it
                 Socket socket = serverSocket.accept();
-
                 LOGGER.info("connection accepted " + socket.getInetAddress());
 
                 HttpConnectionWorkerThread workerThread = new HttpConnectionWorkerThread(socket);
                 workerThread.start();
 
-//            TODO handle close
-//            serverSocket.close();
-
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            LOGGER.error("Problem with setting socket", e);
+        }finally{
+            if(serverSocket != null){
+                try {
+                    serverSocket.close();
+                } catch (IOException e) {}
+            }
         }
     }
 }
