@@ -1,12 +1,18 @@
 package com.http_server.core;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+// we accept requests here and send them to HttpConnectionWorkerThread
 public class ServerListenerThread extends Thread {
+    private final static Logger LOGGER = LoggerFactory.getLogger(ServerListenerThread.class);
+
 
     private int port;
     private String webroot;
@@ -21,37 +27,21 @@ public class ServerListenerThread extends Thread {
     @Override
     public void run() {
         try {
-            // waits to get a connection and accept it
-            Socket socket = serverSocket.accept();
+            while (serverSocket.isBound() && !serverSocket.isClosed()) {
+                // waits to get a connection and accept it
+                Socket socket = serverSocket.accept();
 
-            // once we accept a connection we use socket (variable)
-            InputStream inputStream = socket.getInputStream();
-            OutputStream outputStream = socket.getOutputStream();
+                LOGGER.info("connection accepted " + socket.getInetAddress());
 
-            // TODO reading
+                HttpConnectionWorkerThread workerThread = new HttpConnectionWorkerThread(socket);
+                workerThread.start();
 
+//            TODO handle close
+//            serverSocket.close();
 
-            // writing
-            String html = "<html><head>JAVA Http server Serving...</head></html>";
-
-            final String CRLF = "\n\r";   // 10, 13
-            String response =
-                    "HTTP/1.1 200 OK" + CRLF +   // status: http_version code msg
-                            "Content-Length: " + html.getBytes().length + CRLF+    // header
-                            CRLF+
-                            html+
-                            CRLF+ CRLF;
-
-            outputStream.write(response.getBytes());
-
-            inputStream.close();
-            outputStream.close();
-            socket.close();
-            serverSocket.close();
-
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
-
 }
